@@ -25,8 +25,8 @@ pip install -r requirements.txt
 ## Installation
 1. Clone this repository:
    ```bash
-   git clone <repository-url>
-   cd <repository-folder>
+   git clone git@github.com:opethef10/solar_system_plotter.git
+   cd solar_system_plotter
    ```
 2. Install the required dependencies:
    ```bash
