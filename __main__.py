@@ -117,6 +117,12 @@ if __name__ == '__main__':
         images = []
         for day in range(0, args.duration, args.interval):
             date = args.date + timedelta(days=day)
+
+            # Print the progress
+            total = args.duration // args.interval
+            current = day // args.interval + 1
+            print(f"Generating plot {current}/{total}\r", end='')
+
             if args.geocentric:
                 fig = geocentric_figure(date)
             else:
@@ -135,6 +141,8 @@ if __name__ == '__main__':
         else:
             save_path = OUTPUT_DIR / f"solar_{formatted_date}.gif"
         imageio.mimsave(save_path, images)
+        print()
+        print(f"Saved gif to {save_path}")
 
     else:
         if args.geocentric:
