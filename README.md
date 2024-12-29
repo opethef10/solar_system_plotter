@@ -75,3 +75,9 @@ Plots and GIFs are saved in the `output` directory under the project folder. The
 
 ## License
 This project is licensed under the MIT License. See `LICENSE` for details.
+
+## Screenshots
+![Heliocentric View](assets/solar.png)
+![Geocentric View](assets/geocentric.png)
+![Heliocentric GIF Animation](assets/solar.gif)
+![Geocentric GIF Animation](assets/geocentric.gif)
