@@ -121,7 +121,8 @@ if __name__ == '__main__':
             # Print the progress
             total = args.duration // args.interval
             current = day // args.interval + 1
-            print(f"Generating plot {current}/{total}\r", end='')
+            percentage = int(current / total * 100)
+            print(f"Generating plots {percentage}%\r", end='')
 
             if args.geocentric:
                 fig = geocentric_figure(date)
