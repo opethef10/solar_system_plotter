@@ -38,8 +38,8 @@ pip install -r requirements.txt
 ### Command-Line Arguments
 | Argument        | Description                                                   | Default                       |
 |-----------------|---------------------------------------------------------------|-------------------------------|
-| `--geocentric`  | Plot the geocentric view (default is heliocentric).            | `False`                       |
-| `--date`        | Date to plot (format: `%Y-%m-%d %H:%M:%S`).                   | Current UTC time              |
+| `--geocentric`  | Plot the geocentric view (default is heliocentric).           | `False`                       |
+| `--date`        | Date to plot (format: `%Y-%m-%d`).                            | Today's date                  |
 | `--gif`         | Create a GIF animation.                                       | `False`                       |
 | `--duration`    | Total number of days to include in the animation (GIF mode).  | `1000`                        |
 | `--interval`    | Interval in days between frames in the GIF (GIF mode).        | `5`                           |
@@ -53,7 +53,7 @@ pip install -r requirements.txt
 
 2. **Plot a geocentric view for a specific date:**
    ```bash
-   python __main__.py --geocentric --date "2024-01-01 00:00:00"
+   python __main__.py --geocentric --date "2024-01-01"
    ```
 
 3. **Generate a heliocentric GIF for 100 days with a 10-day interval:**

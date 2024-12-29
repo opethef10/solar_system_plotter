@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import argparse
-from datetime import datetime, timedelta, UTC
+from datetime import date as Date, timedelta
 from io import BytesIO
 from pathlib import Path
 
@@ -16,10 +16,8 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 DEFAULT_NUM_DAYS = 1000
 DEFAULT_INTERVAL = 5
 
-DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
-DATE_FILE_FORMAT = '%Y%m%d_%H%M%S'
-
-TITLE_FONT_SIZE = 10
+TITLE_FONT_SIZE = 11
+TITLE_Y = 1.07
 LEGEND_FONT_SIZE = "small"
 BBOX = (1.21, 0.8)
 
@@ -37,9 +35,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--date',
-        type=lambda s: datetime.strptime(s, DATE_FORMAT).replace(tzinfo=UTC),
-        default=datetime.now(UTC),
-        help=f'Date to plot (format: {DATE_FORMAT})'
+        type=Date.fromisoformat,
+        default=Date.today(),
+        help='Date to plot (format: yyyy-mm-dd)'
     )
     parser.add_argument(
         '--gif',
@@ -57,15 +55,15 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def solar_system_figure(date: datetime = datetime.now(UTC), planets: tuple = PLANETS) -> plt.Figure:
+def solar_system_figure(date: Date) -> plt.Figure:
     """Generate a polar plot of the solar system."""
 
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-    ax.set_title(f'Solar system at {date} UTC', fontsize=TITLE_FONT_SIZE)
+    ax.set_title(f'Solar system at {date}', fontsize=TITLE_FONT_SIZE, y=TITLE_Y)
 
     # Radius is used to plot the planets at different distances from the Earth
     # The Sun is at the center of the plot and the planets are in the order of the tuple
-    for radius, planet in enumerate(planets):
+    for radius, planet in enumerate(PLANETS):
         planet.compute(date)
 
         if planet.name == "Moon":
@@ -84,16 +82,16 @@ def solar_system_figure(date: datetime = datetime.now(UTC), planets: tuple = PLA
     return fig
 
 
-def geocentric_figure(date: datetime = datetime.now(UTC), planets: tuple = PLANETS) -> plt.Figure:
+def geocentric_figure(date: Date) -> plt.Figure:
     """Generate a polar plot of the geocentric view of the solar system."""
 
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-    ax.set_title(f'Geocentric view at {date} UTC', fontsize=TITLE_FONT_SIZE)
+    ax.set_title(f'Geocentric view at {date}', fontsize=TITLE_FONT_SIZE, y=TITLE_Y)
 
     # Radius is used to plot the planets at different distances from the Earth
     # Because of the geocentric view, the Earth is at the center of the plot
     # The Moon is very close to the Earth, so we plot it at a radius of 0.5
-    for radius, planet in enumerate(planets):
+    for radius, planet in enumerate(PLANETS):
         planet.compute(date)
         if planet.name == "Moon":
             marker = 'x'
@@ -111,7 +109,7 @@ def geocentric_figure(date: datetime = datetime.now(UTC), planets: tuple = PLANE
 
 if __name__ == '__main__':
     args = parse_args()
-    formatted_date = args.date.strftime(DATE_FILE_FORMAT)
+    formatted_date = args.date.isoformat()
 
     if args.gif:
         images = []
