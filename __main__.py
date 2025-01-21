@@ -55,52 +55,40 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def solar_system_figure(date: Date) -> plt.Figure:
-    """Generate a polar plot of the solar system."""
+def solar_system_json(date: Date) -> dict:
+    """Generate JSON data for the solar system at a given date."""
+    data = {"date": date.isoformat(), "planets": []}
 
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-    ax.set_title(f'Solar system at {date}', fontsize=TITLE_FONT_SIZE, y=TITLE_Y)
-
-    # Radius is used to plot the planets at different distances from the Earth
-    # The Sun is at the center of the plot and the planets are in the order of the tuple
     for radius, planet in enumerate(PLANETS):
         planet.compute(date)
-
-        if planet.name == "Moon":
-            marker = '*'
-            label = "Sun"
-        elif planet.name == "Sun":
-            marker = 'x'
-            label = "Earth"
-        else:
-            label = planet.name
-            marker = 'o'
-        ax.plot(planet.hlon, radius, marker=marker, label=label)
-
-    ax.legend(loc='upper center', bbox_to_anchor=BBOX, fontsize=LEGEND_FONT_SIZE)
-    ax.set_yticklabels([])
-    return fig
+        data["planets"].append({
+            "name": planet.name,
+            "radius": radius,
+            "geo_radius": 0.5 if planet.name == "Moon" else radius,  # Adjust radius for Moon
+            "hlon": planet.hlon,  # Heliocentric longitude
+            "ra": planet.ra,  # Right ascension
+        })
+    return data
 
 
-def geocentric_figure(date: Date) -> plt.Figure:
-    """Generate a polar plot of the geocentric view of the solar system."""
-
+def plot_from_json(data: dict, geocentric: bool=False) -> plt.Figure:
+    """Generate a matplotlib figure from JSON data."""
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-    ax.set_title(f'Geocentric view at {date}', fontsize=TITLE_FONT_SIZE, y=TITLE_Y)
+    title_prefix = "Geocentric view" if geocentric else "Solar system"
+    ax.set_title(f"{title_prefix} at {data['date']}", fontsize=TITLE_FONT_SIZE, y=TITLE_Y)
 
-    # Radius is used to plot the planets at different distances from the Earth
-    # Because of the geocentric view, the Earth is at the center of the plot
-    # The Moon is very close to the Earth, so we plot it at a radius of 0.5
-    for radius, planet in enumerate(PLANETS):
-        planet.compute(date)
-        if planet.name == "Moon":
-            marker = 'x'
-            radius = 0.5
-        elif planet.name == "Sun":
-            marker = '*'
-        else:
-            marker = 'o'
-        ax.plot(planet.ra, radius, marker=marker, label=planet.name)
+    for planet in data["planets"]:
+        marker = 'o'
+        label = planet["name"]
+        if planet["name"] == "Moon":
+            marker = 'x' if geocentric else '*'
+            label = label if geocentric else "Sun"
+        elif planet["name"] == "Sun":
+            marker = '*' if geocentric else 'x'
+            label = label if geocentric else "Earth"
+        angle = planet["ra"] if geocentric else planet["hlon"]
+        radius = planet["geo_radius"] if geocentric else planet["radius"]
+        ax.plot(angle, radius, marker=marker, label=label)
 
     ax.legend(loc='upper center', bbox_to_anchor=BBOX, fontsize=LEGEND_FONT_SIZE)
     ax.set_yticklabels([])
@@ -109,7 +97,6 @@ def geocentric_figure(date: Date) -> plt.Figure:
 
 if __name__ == '__main__':
     args = parse_args()
-    formatted_date = args.date.isoformat()
 
     if args.gif:
         images = []
@@ -122,10 +109,8 @@ if __name__ == '__main__':
             percentage = int(current / total * 100)
             print(f"Generating plots {percentage}%\r", end='')
 
-            if args.geocentric:
-                fig = geocentric_figure(date)
-            else:
-                fig = solar_system_figure(date)
+            data = solar_system_json(date)
+            fig = plot_from_json(data, geocentric=args.geocentric)
 
             # Save the figure to a buffer instead of a file
             # It's faster and doesn't require cleaning up the file afterwards
@@ -135,17 +120,14 @@ if __name__ == '__main__':
             images.append(img)
             plt.close(fig)
 
-        if args.geocentric:
-            save_path = OUTPUT_DIR / f"geo_{formatted_date}.gif"
-        else:
-            save_path = OUTPUT_DIR / f"solar_{formatted_date}.gif"
+        formatted_date = args.date.isoformat()
+        graph_format = "geocentric" if args.geocentric else "solar"
+        save_path = OUTPUT_DIR / f"{graph_format}_{formatted_date}.gif"
         imageio.mimsave(save_path, images)
         print()
         print(f"Saved gif to {save_path}")
 
     else:
-        if args.geocentric:
-            fig = geocentric_figure(args.date)
-        else:
-            fig = solar_system_figure(args.date)
+        data = solar_system_json(args.date)
+        fig = plot_from_json(data, geocentric=args.geocentric)
         plt.show()
