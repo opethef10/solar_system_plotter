@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 import argparse
 from datetime import date as Date, timedelta
+from functools import cache
 from io import BytesIO
+import json
 from pathlib import Path
 
 from ephem import Moon, Mercury, Venus, Sun, Mars, Jupiter, Saturn, Uranus, Neptune
@@ -55,39 +57,51 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def solar_system_json(date: Date) -> dict:
+@cache
+def solar_system_json(date: Date) -> str:
     """Generate JSON data for the solar system at a given date."""
     data = {"date": date.isoformat(), "planets": []}
 
     for radius, planet in enumerate(PLANETS):
         planet.compute(date)
+        if planet.name == "Sun":
+            heliocentric_label = "Earth"
+        elif planet.name == "Moon":
+            heliocentric_label = "Sun"
+        else:
+            heliocentric_label = planet.name
         data["planets"].append({
             "name": planet.name,
+            "geocentric_label": planet.name,
+            "heliocentric_label": heliocentric_label,
             "radius": radius,
-            "geo_radius": 0.5 if planet.name == "Moon" else radius,  # Adjust radius for Moon
+            "geo_radius": 0.5 if planet.name == "Moon" else radius,
             "hlon": planet.hlon,  # Heliocentric longitude
-            "ra": planet.ra,  # Right ascension
+            "ra": planet.ra,      # Right ascension
         })
-    return data
+    return json.dumps(data)
 
 
-def plot_from_json(data: dict, geocentric: bool=False) -> plt.Figure:
+@cache
+def plot_from_json(data: str, geocentric: bool=False, interactive: bool=True) -> plt.Figure:
     """Generate a matplotlib figure from JSON data."""
+    data = json.loads(data)  # Convert the JSON string back to a dictionary
+    if not interactive:
+        # Plot using Matplotlib with a non-interactive backend
+        plt.switch_backend("Agg")  # Use the Agg backend to avoid GUI issues
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
     title_prefix = "Geocentric view" if geocentric else "Solar system"
     ax.set_title(f"{title_prefix} at {data['date']}", fontsize=TITLE_FONT_SIZE, y=TITLE_Y)
 
     for planet in data["planets"]:
         marker = 'o'
-        label = planet["name"]
         if planet["name"] == "Moon":
             marker = 'x' if geocentric else '*'
-            label = label if geocentric else "Sun"
         elif planet["name"] == "Sun":
             marker = '*' if geocentric else 'x'
-            label = label if geocentric else "Earth"
         angle = planet["ra"] if geocentric else planet["hlon"]
         radius = planet["geo_radius"] if geocentric else planet["radius"]
+        label = planet["geocentric_label"] if geocentric else planet["heliocentric_label"]
         ax.plot(angle, radius, marker=marker, label=label)
 
     ax.legend(loc='upper center', bbox_to_anchor=BBOX, fontsize=LEGEND_FONT_SIZE)
