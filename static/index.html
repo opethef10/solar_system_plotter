@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Viewer</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Solar System Viewer</h1>
+        <form id="plot-form" action="/" method="get">
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required>
+            <label for="geocentric">
+                <input type="checkbox" id="geocentric" name="geocentric" value="true"> Geocentric View
+            </label>
+            <button type="submit">Generate Plot</button>
+        </form>
+        <div class="plot-container">
+            <h2>Generated Plot</h2>
+            <img src="" id="plot" alt="Solar System Plot">
+            <p class="muted-text">Created by <strong>Onur Arıkan</strong> (2025) |
+                <a href="https://github.com/opethef10">GitHub</a> |
+                <a href="https://www.linkedin.com/in/onur93arikan">LinkedIn</a>
+            </p>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
