@@ -24,10 +24,12 @@ h1 {
 }
 
 form {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
 }
 
 label {
@@ -37,6 +39,17 @@ label {
 input[type="date"],
 input[type="checkbox"] {
     margin-right: 10px;
+}
+
+input[type="number"] {
+    width: 60px; /* Set a fixed width for number inputs */
+    margin-right: 10px;
+}
+
+.gif-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 button {
@@ -68,4 +81,10 @@ img {
 .muted-text {
     font-size: 0.8em;
     color: #6c757d;
+}
+
+.helper-text {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 10px;
 }
