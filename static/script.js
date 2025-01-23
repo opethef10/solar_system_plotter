@@ -25,21 +25,33 @@ const params = new URLSearchParams({
 }).toString();
 
 const actualSrc = `${action}?${params}`;
-const tempImg = new Image();
-tempImg.src = actualSrc;
-
-tempImg.onload = function() {
-    plotImg.src = actualSrc; // Update to actual image once loaded
-    helperText.style.display = 'none'; // Hide helper text when image is loade
-};
-
-tempImg.onerror = function() {
-    plotImg.alt = 'Failed to load plot'; // Set alt text if image fails to load
-};
+fetch(actualSrc)
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw new Error(JSON.stringify(errorData['error']));
+            });
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const url = URL.createObjectURL(blob);
+        plotImg.src = url; // Update to actual image once loaded
+        helperText.style.display = 'none'; // Hide helper text when image is loaded
+    })
+    .catch(error => {
+        plotImg.src = ''; // Remove the placeholder image
+        plotImg.alt = error; // Set alt text if image fails to load
+        console.error(error, error);
+        helperText.style.display = 'none'; // Hide helper text when image is loaded
+    });
 
 const gifCheckbox = document.getElementById('gif');
 const durationInput = document.getElementById('duration');
 const intervalInput = document.getElementById('interval');
+durationInput.max = 1000;
+durationInput.min = 1;
+intervalInput.min = 1;
 
 function toggleGifInputs() {
     const isGifChecked = gifCheckbox.checked;

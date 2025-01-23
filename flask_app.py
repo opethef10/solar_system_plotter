@@ -63,15 +63,25 @@ def plot():
 @app.route("/plot_gif")
 def plot_gif():
     """Route to generate and return a plot as an image."""
-    date_str = request.args.get("date", Date.today().isoformat())
-    duration = int(request.args.get("duration", DEFAULT_NUM_DAYS))
-    interval = int(request.args.get("interval", DEFAULT_INTERVAL))
-    geocentric = request.args.get("geocentric", "false").lower() == "true"
-
     try:
-        date = Date.fromisoformat(date_str)
+        date = Date.fromisoformat(request.args.get("date", Date.today().isoformat()))
     except ValueError:
         return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
+
+    try:
+        duration = int(request.args.get("duration", DEFAULT_NUM_DAYS))
+        interval = int(request.args.get("interval", DEFAULT_INTERVAL))
+    except ValueError:
+        return jsonify({"error": "Duration and interval must be integers."}), 400
+
+    if not 0 < duration <= 1000:
+        return jsonify({"error": "Duration should be between 1-1000 days."}), 400
+    if interval <= 0:
+        return jsonify({"error": "Interval should be positive"}), 400
+    if duration / interval > 200:
+        return jsonify({"error": "Duration divided by interval cannot exceed 200."}), 400
+
+    geocentric = request.args.get("geocentric", "false").lower() == "true"
 
     buffer = create_gif(date, duration, interval, geocentric)
 
