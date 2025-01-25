@@ -6,7 +6,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .container {
@@ -26,29 +26,42 @@ h1 {
 form {
     display: block;
     margin-bottom: 20px;
+    padding: 10px;
+    max-width: 600px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 label {
-    margin: 0 10px;
+    margin-right: 10px;
+    font-size: 14px;
+    white-space: nowrap; /* Prevent text from wrapping to the next line */
 }
 
 input[type="date"],
-input[type="checkbox"] {
+input[type="checkbox"],
+input[type="number"] {
     margin-right: 10px;
+    margin-bottom: 5px;
+    max-width: 200px; /* Keep inputs from stretching too wide */
 }
 
 input[type="number"] {
-    width: 60px; /* Set a fixed width for number inputs */
-    margin-right: 10px;
+    width: 60px;
 }
 
 .gif-options {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
@@ -59,23 +72,57 @@ button {
     padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
+    width: auto;
 }
 
 button:hover {
     background-color: #0056b3;
 }
 
-.plot-container {
-    margin-top: 20px;
+/* Media query for small screens (phones) */
+@media (max-width: 600px) {
+    form {
+        padding: 5px;
+    }
+
+    .form-group {
+        flex-direction: column; /* Stack fields vertically on small screens */
+        align-items: center; /* Center fields */
+    }
+
+    label {
+        margin-right: 0;
+        margin-bottom: 5px;
+        white-space: nowrap; /* Prevent label text from wrapping */
+    }
+
+    /* Ensure checkbox and label stay inline on small screens */
+    .form-group input[type="checkbox"] {
+        margin-right: 5px;
+        margin-left: 0;
+    }
+
+    /* Align checkbox and label horizontally */
+    .form-group label[for="geocentric"],
+    .form-group label[for="gif"] {
+        display: inline-flex; /* Align label and checkbox horizontally */
+        align-items: center;
+    }
+
+    input[type="date"],
+    input[type="checkbox"],
+    input[type="number"] {
+        width: 100%; /* Make inputs take full width but not stretch too much */
+        max-width: 200px; /* Limit the width */
+    }
+
+    .gif-options {
+        flex-direction: column; /* Stack the GIF options vertically */
+    }
 }
 
-img {
-    max-width: 100%;
-    height: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 5px;
-    background-color: #fff;
+.plot-container {
+    margin-top: 20px;
 }
 
 .muted-text {
@@ -87,4 +134,42 @@ img {
     font-size: 14px;
     color: #555;
     margin-bottom: 10px;
+    display: none; /* Initially hidden */
+}
+
+.info-text {
+    list-style-type: none;
+    padding: 0;
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+.error-text {
+    color: red;
+    font-weight: bold;
+    display: none; /* Initially hidden */
+    margin-top: 10px;
+}
+
+.angulardrag {
+    pointer-events: none !important;
+}
+
+.plot-container {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+}
+
+#plot {
+    min-height: 600px;
+    width: 100%; /* Make the container responsive */
+    height: auto; /* Maintain aspect ratio */
+    overflow: hidden; /* Prevent scrollbars */
+}
+
+#plot svg {
+    width: 100%; /* Scale SVG to fit container */
+    height: auto; /* Maintain aspect ratio */
 }

@@ -1,57 +1,16 @@
-const urlParams = new URLSearchParams(window.location.search);
-const dateParam = urlParams.get('date') || new Date().toISOString().split('T')[0];
-const geocentricParam = urlParams.get('geocentric') === 'true';
-const gifParam = urlParams.get('gif') === 'true';
-const durationParam = urlParams.get('duration') || 1000; // Default value 1000
-const intervalParam = urlParams.get('interval') || 5; // Default value 5
-
-document.getElementById('date').value = dateParam;
-document.getElementById('geocentric').checked = geocentricParam;
-document.getElementById('gif').checked = gifParam;
-document.getElementById('duration').value = durationParam;
-document.getElementById('interval').value = intervalParam;
-
-const plotImg = document.getElementById('plot');
-const helperText = document.getElementById('helper-text');
-const placeholderSrc = '/static/loading.gif'; // Path to your placeholder image
-plotImg.src = placeholderSrc; // Set placeholder image initially
-
-const action = gifParam ? '/plot_gif' : '/plot';
-const params = new URLSearchParams({
-    date: dateParam,
-    geocentric: geocentricParam,
-    duration: durationParam,
-    interval: intervalParam
-}).toString();
-
-const actualSrc = `${action}?${params}`;
-fetch(actualSrc)
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(errorData => {
-                throw new Error(JSON.stringify(errorData['error']));
-            });
-        }
-        return response.blob();
-    })
-    .then(blob => {
-        const url = URL.createObjectURL(blob);
-        plotImg.src = url; // Update to actual image once loaded
-        helperText.style.display = 'none'; // Hide helper text when image is loaded
-    })
-    .catch(error => {
-        plotImg.src = ''; // Remove the placeholder image
-        plotImg.alt = error; // Set alt text if image fails to load
-        console.error(error, error);
-        helperText.style.display = 'none'; // Hide helper text when image is loaded
-    });
-
 const gifCheckbox = document.getElementById('gif');
 const durationInput = document.getElementById('duration');
 const intervalInput = document.getElementById('interval');
-durationInput.max = 1000;
-durationInput.min = 1;
-intervalInput.min = 1;
+const dateInput = document.getElementById('date');
+
+const defaultDate = new Date().toISOString().split('T')[0];
+const defaultDuration = 1000;
+const defaultInterval = 5;
+const gif_refresh_milliseconds = 50; // Timeout in milliseconds
+
+dateInput.value = defaultDate;
+durationInput.value = defaultDuration;
+intervalInput.value = defaultInterval;
 
 function toggleGifInputs() {
     const isGifChecked = gifCheckbox.checked;
@@ -61,3 +20,212 @@ function toggleGifInputs() {
 
 gifCheckbox.addEventListener('change', toggleGifInputs);
 toggleGifInputs();
+
+const plotContainer = document.getElementById('plot');
+const errorText = document.getElementById('error-text');
+
+
+let isPlotting = false; // Flag to track if plotting is in progress
+let stopPlotting = false; // Flag to track if plotting is in progress
+const PlotManager = {
+    isPlotting: false,
+    intervalId: null, // Store the interval ID for dynamic plotting
+};
+const queryCache = {}; // Cache the query results to avoid duplicate requests
+function renderPlot(data, geocentric) {
+    if (data.length === 1) {
+        renderPlotlyChart(data[0], geocentric);
+    } else if (data.length > 1) {
+        let index = 0;
+        isPlotting = true;
+        stopPlotting = false;
+        PlotManager.intervalId = setInterval(() => {
+            if (index >= data.length) {
+                clearInterval(PlotManager.intervalId);
+                PlotManager.isPlotting = false;
+                return;
+            }
+            renderPlotlyChart(data[index], geocentric);
+            index++;
+        }, gif_refresh_milliseconds);
+    }
+    errorText.style.display = 'none';
+}
+// Function to fetch JSON data and render the Plotly chart
+function fetchDataAndRenderPlot() {
+    const date = dateInput.value;
+    const geocentric = document.getElementById('geocentric').checked;
+    const gif = document.getElementById('gif').checked;
+    const duration = durationInput.value;
+    const interval = intervalInput.value;
+
+    // Stop any existing plotting process
+    if (PlotManager.isPlotting) {
+        clearInterval(PlotManager.intervalId); // Stop the existing interval
+        PlotManager.isPlotting = false; // Reset the flag
+    }
+
+    PlotManager.isPlotting = true;
+
+    const queryKey = `${date}-${geocentric}-${gif}-${duration}-${interval}`;
+
+    if (queryCache[queryKey]) {
+        renderPlot(queryCache[queryKey], geocentric);
+        return;
+    }
+
+    const fetchInput = gif
+        ? `/api?date=${date}&geocentric=${geocentric}&gif=${gif}&duration=${duration}&interval=${interval}`
+        : `/api?date=${date}&geocentric=${geocentric}`;
+
+    // Fetch JSON data from the Flask backend
+    fetch(fetchInput)
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.error);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            queryCache[queryKey] = data; // Store the result in the cache
+            renderPlot(data, geocentric);
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            errorText.textContent = 'Error fetching data: ' + error.message;
+            errorText.style.display = 'block';
+        });
+}
+
+    // Calculate image positions and create image objects
+    // const images = data.planets.map(planet => {
+    //     const radius = geocentric ? planet.geo_radius : planet.radius;
+    //     const label = geocentric ? planet.geocentric_label : planet.heliocentric_label;
+    //     const angle = geocentric ? planet.ra : planet.hlon;
+    //     const angleRadians = angle; // Angle is already in radians
+    //     var xScale = 0.9*600/600;
+    //     var yScale = xScale * 1.25;
+    //
+    //     // Normalize the radius to match the polar chart's range
+    //     const normalizedRadius = radius / 20; // Assuming the radial axis range is [0, 10]
+    //
+    //     return {
+    //         source: `/static/${label.toLowerCase()}.png`, // Path to planet image
+    //         xref: 'paper', // Use 'paper' reference for polar charts
+    //         yref: 'paper', // Use 'paper' reference for polar charts
+    //         x: 0.5 + xScale * normalizedRadius * Math.cos(angleRadians), // Normalize radius and convert to Cartesian
+    //         y: 0.5 + yScale * normalizedRadius * Math.sin(angleRadians), // Normalize radius and convert to Cartesian
+    //         sizex: 0.05, // Image width (relative to plot size)
+    //         sizey: 0.05, // Image height (relative to plot size)
+    //         xanchor: 'center', // Center the image horizontally
+    //         yanchor: 'middle' // Center the image vertically
+    //     };
+    // });
+function renderPlotlyChart(data, geocentric) {
+    // Create individual traces for each planet
+    const traces = data.planets.map(planet => {
+        const radius = geocentric ? planet.geo_radius : planet.radius;
+        const angle = geocentric ? planet.ra : planet.hlon;
+        const angleDegrees = angle * (180 / Math.PI); // Convert radians to degrees
+        const label = geocentric ? planet.geocentric_label : planet.heliocentric_label;
+
+        return {
+            r: [radius], // Single radius value for the planet
+            theta: [angleDegrees], // Single angle value for the planet
+            mode: 'markers+text', // Markers with text labels
+            name: label, // Legend label for the planet
+            text: [label], // Planet name as text
+            textposition: 'top center', // Position text labels above the markers
+            textfont: {
+                family: 'Arial, sans-serif', // Roboto font with fallback
+                size: 9, // Font size
+                color: 'black', // White text
+            },
+            // texttemplate: `
+            //     <span style="
+            //         background: rgba(255, 0, 0, 0.6);
+            //         border-radius: 0px;
+            //         padding: 1px 3px;
+            //         font-weight: 600;">
+            //         %{text}
+            //     </span>`,
+            marker: {
+                symbol: getMarkerSymbol(label, geocentric), // Marker symbol based on the planet
+                size: 16, // Marker size
+                color: getMarkerColor(label) // Marker color based on the planet
+            },
+            type: 'scatterpolar' // Specify the trace type
+        };
+    });
+
+    const layout = {
+        title: `${geocentric ? 'Geocentric' : 'Solar System'} View at ${data.date}`,
+        polar: {
+            radialaxis: {
+                visible: true,
+                showticklabels: false,
+                range: [0, 9],
+            },
+            angularaxis: {
+                direction: 'counterclockwise',
+            }
+        },
+        showlegend: false, // Enable the legend
+        dragmode: false, // Disable drag interactions
+        staticPlot: true, // Disable interactions like zooming and dragging
+        autosize: true, // Allow the plot to resize automatically
+        // margin: { l: 50, r: 50, b: 50, t: 80 }, // Adjust margins to fit the title and labels
+        // height: 600, // Set the height of the plot
+        yaxis: { fixedrange: true },
+        xaxis: { fixedrange: true }
+    };
+
+    // Render the Plotly chart in the plot container
+    Plotly.newPlot(plotContainer, traces, layout, { displayModeBar: false, scrollZoom: false, dragmode: false });
+}
+
+
+// Function to determine marker symbols based on planet name and view
+function getMarkerSymbol(planetName, geocentric) {
+    if (planetName === "Sun") {
+        return 'star';
+    } else {
+        return 'circle'; // Default marker for other planets
+    }
+}
+
+// Optional: Function to assign colors to markers
+function getMarkerColor(planetName) {
+    const colors = {
+        Sun: 'gold',
+        Moon: 'silver',
+        Earth: 'blue',
+        Mars: 'red',
+        Venus: 'orange',
+        Mercury: 'gray',
+        Jupiter: 'brown',
+        Saturn: 'tan',
+        Uranus: 'lightblue',
+        Neptune: 'darkblue'
+    };
+    return colors[planetName] || 'black'; // Default color if not specified
+}
+
+// Initial rendering when the page loads
+fetchDataAndRenderPlot();
+
+const resizeObserver = new ResizeObserver(() => {
+    const width = plotContainer.clientWidth;
+    const height = plotContainer.clientHeight;
+    Plotly.relayout(plotContainer, { width, height });
+});
+
+resizeObserver.observe(plotContainer);
+
+// Event listener for form submission
+document.getElementById('plot-form').addEventListener('submit', function (event) {
+    event.preventDefault(); // Prevent the form from submitting
+    fetchDataAndRenderPlot(); // Fetch data and render the plot
+});

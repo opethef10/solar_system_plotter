@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solar System Viewer</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -12,7 +13,7 @@
         <form id="plot-form" action="/" method="get">
             <div class="form-group">
                 <label for="date">Date:</label>
-                <input type="date" id="date" name="date" required>
+                <input type="date" id="date" name="date" required max="9999-12-31">
                 <label for="geocentric">
                     <input type="checkbox" id="geocentric" name="geocentric" value="true"> Geocentric View
                 </label>
@@ -22,18 +23,23 @@
                     <input type="checkbox" id="gif" name="gif" value="true"> Create GIF
                 </label>
                 <label for="duration">Duration (days):</label>
-                <input type="number" id="duration" name="duration" min="1" disabled>
+                <input type="number" id="duration" name="duration" min="1" max="1000" disabled>
                 <label for="interval">Interval (days):</label>
-                <input type="number" id="interval" name="interval" min="1" disabled>
+                <input type="number" id="interval" name="interval" min="1" max="20" disabled>
+            </div>
+            <div class="form-group">
+                <ul id="info-text" class="info-text">
+                    <li>Duration and interval apply only to GIF generation.</li>
+                    <li>Duration can range from 1 to 1000, interval from 1 to 20.</li>
+                </ul>
             </div>
             <div class="form-group">
                 <button type="submit">Generate Plot</button>
             </div>
         </form>
         <div class="plot-container">
-            <h2>Generated Plot</h2>
-            <div id="helper-text" class="helper-text">GIF generation may take up to 30 seconds. Please be patient.</div>
-            <img src="" id="plot" alt="Solar System Plot">
+            <div id="error-text" class="error-text"></div>
+            <div id="plot"></div>
             <p class="muted-text">Created by <strong>Onur Arıkan</strong> (2025) |
                 <a href="https://github.com/opethef10">GitHub</a> |
                 <a href="https://www.linkedin.com/in/onur93arikan">LinkedIn</a>

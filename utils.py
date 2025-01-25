@@ -1,25 +1,28 @@
 import argparse
 from datetime import date as Date, timedelta
 from functools import cache
-from io import BytesIO
 import json
 
 from ephem import Moon, Mercury, Venus, Sun, Mars, Jupiter, Saturn, Uranus, Neptune
-import imageio.v2 as imageio
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.axes import Axes
 
 
+# Constants both for Flask and __main__.py
 DEFAULT_NUM_DAYS = 1000
+MAX_NUM_DAYS = 1000
 DEFAULT_INTERVAL = 5
-FPS = 15
+MAX_INTERVAL = 20
 
+# Matplotlib settings
 TITLE_FONT_SIZE = 11
 TITLE_Y = 1.07
 LEGEND_FONT_SIZE = "small"
 BBOX = (1.21, 0.8)
+FPS = 20
 
+# Ephem planet classes
 PLANETS = Moon(), Mercury(), Venus(), Sun(), Mars(), Jupiter(), Saturn(), Uranus(), Neptune()
 
 
@@ -126,29 +129,3 @@ def create_anim(date: Date, duration: int, interval: int, geocentric: bool) -> F
     )
 
     return anim
-
-
-@cache
-def _create_frames(date: Date, duration: int, interval: int, geocentric: bool) -> list:
-    date_range = [date + timedelta(days=i) for i in range(0, duration, interval)]
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-    frames = []
-
-    for frame_date in date_range:
-        ax.clear()
-        data = solar_system_json(frame_date)
-        plot_from_json(ax, data, geocentric)
-        buf = BytesIO()
-        fig.savefig(buf, format='png')
-        buf.seek(0)
-        frames.append(imageio.imread(buf))
-        buf.close()
-
-    return frames
-
-def create_gif(date: Date, duration: int, interval: int, geocentric: bool) -> BytesIO:
-    frames = _create_frames(date, duration, interval, geocentric)
-    buffer = BytesIO()
-    imageio.mimsave(buffer, frames, format='gif', fps=FPS, loop=0)
-    buffer.seek(0)
-    return buffer
