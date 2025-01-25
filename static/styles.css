@@ -109,13 +109,6 @@ button:hover {
         align-items: center;
     }
 
-    input[type="date"],
-    input[type="checkbox"],
-    input[type="number"] {
-        width: 100%; /* Make inputs take full width but not stretch too much */
-        max-width: 200px; /* Limit the width */
-    }
-
     .gif-options {
         flex-direction: column; /* Stack the GIF options vertically */
     }
@@ -163,13 +156,5 @@ button:hover {
 }
 
 #plot {
-    min-height: 600px;
-    width: 100%; /* Make the container responsive */
-    height: auto; /* Maintain aspect ratio */
-    overflow: hidden; /* Prevent scrollbars */
-}
-
-#plot svg {
-    width: 100%; /* Scale SVG to fit container */
     height: auto; /* Maintain aspect ratio */
 }

@@ -170,6 +170,7 @@ function renderPlotlyChart(data, geocentric) {
             },
             angularaxis: {
                 direction: 'counterclockwise',
+                tickfont: { size: 8 },
             }
         },
         showlegend: false, // Enable the legend
@@ -178,6 +179,8 @@ function renderPlotlyChart(data, geocentric) {
         autosize: true, // Allow the plot to resize automatically
         // margin: { l: 50, r: 50, b: 50, t: 80 }, // Adjust margins to fit the title and labels
         // height: 600, // Set the height of the plot
+        margin: { l: 0, r: 0, b: 20, t: 50 }, // Minimize margins to reduce whitespace
+        height: Math.min(700, window.innerWidth * 0.87), // Dynamically adjust height for mobile screens
         yaxis: { fixedrange: true },
         xaxis: { fixedrange: true }
     };
