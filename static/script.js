@@ -133,7 +133,7 @@ function renderPlot(data, geocentric) {
 // Function to fetch JSON data and render the Plotly chart
 function fetchDataAndRenderPlot() {
     const date = dateInput.value;
-    const geocentric = document.getElementById('geocentric').checked;
+    const geocentric = geocentricCheckbox.checked;
     const gif = document.getElementById('gif').checked;
     const duration = durationInput.value;
     const interval = intervalInput.value;
@@ -146,7 +146,7 @@ function fetchDataAndRenderPlot() {
 
     PlotManager.isPlotting = true;
 
-    const queryKey = `${date}-${geocentric}-${gif}-${duration}-${interval}`;
+    const queryKey = gif ? `${date}-${gif}-${duration}-${interval}` : `${date}`;
 
     // Check if data is available in localStorage
     const cachedData = localStorage.getItem(queryKey);
@@ -158,8 +158,8 @@ function fetchDataAndRenderPlot() {
     }
 
     const fetchInput = gif
-        ? `/api?date=${date}&geocentric=${geocentric}&gif=${gif}&duration=${duration}&interval=${interval}`
-        : `/api?date=${date}&geocentric=${geocentric}`;
+        ? `/api?date=${date}&gif=${gif}&duration=${duration}&interval=${interval}`
+        : `/api?date=${date}`;
 
     // Fetch JSON data from the Flask backend
     fetch(fetchInput)
