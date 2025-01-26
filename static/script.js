@@ -6,9 +6,90 @@ const dateInput = document.getElementById('date');
 
 const defaultDate = new Date().toISOString().split('T')[0];
 const gif_refresh_milliseconds = 50; // Timeout in milliseconds
-const estimated_network_size = 1.135; // Estimated network size in KiB
 
 dateInput.value = defaultDate;
+
+function getLocalStorageSize() {
+    let totalSize = 0;
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            totalSize += localStorage.getItem(key).length * 2; // Each character is 2 bytes
+        }
+    }
+    return totalSize;
+}
+
+function ensureEnoughSpace(requiredSize) {
+    const maxSize = 5 * 1024 * 1024; // 5MB (adjust as needed)
+    let currentSize = getLocalStorageSize();
+
+    // If the required size exceeds the maximum allowed size, throw an error
+    if (requiredSize > maxSize) {
+        throw new Error('Data is too large to store in localStorage');
+    }
+
+    // If there's not enough space, clear older entries
+    if (currentSize + requiredSize > maxSize) {
+        const entries = [];
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                const value = localStorage.getItem(key);
+                const timestamp = JSON.parse(value).timestamp; // Assume each value has a timestamp
+                entries.push({ key, size: value.length * 2, timestamp });
+            }
+        }
+
+        // Sort entries by timestamp (oldest first)
+        entries.sort((a, b) => a.timestamp - b.timestamp);
+
+        // Remove the oldest entries until there's enough space
+        while (currentSize + requiredSize > maxSize && entries.length > 0) {
+            const oldestEntry = entries.shift(); // Get the oldest entry
+            localStorage.removeItem(oldestEntry.key); // Remove it from localStorage
+            currentSize -= oldestEntry.size; // Update the current size
+        }
+    }
+}
+
+function addToCache(queryKey, data) {
+    const value = JSON.stringify({
+        data, // The actual data
+        timestamp: Date.now(), // Current timestamp
+    });
+
+    const requiredSize = value.length * 2; // Calculate the size of the new data
+
+    // Ensure there's enough space in localStorage
+    ensureEnoughSpace(requiredSize);
+
+    // Store the data in localStorage
+    localStorage.setItem(queryKey, value);
+}
+
+function manageCacheSize() {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    let currentSize = 0;
+
+    // Calculate current cache size
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            currentSize += localStorage.getItem(key).length * 1; // Each character is 2 bytes
+        }
+    }
+
+    debugger;
+    // If cache size exceeds the limit, remove the oldest entries
+    if (currentSize > maxSize) {
+        const keys = Object.keys(localStorage);
+        while (currentSize > maxSize && keys.length > 0) {
+            const oldestKey = localStorage.key(0)
+            const itemSize = localStorage.getItem(oldestKey).length * 1;
+            localStorage.removeItem(oldestKey);
+            currentSize -= itemSize;
+        }
+    }
+}
+
 
 function toggleGifInputs() {
     const isGifChecked = gifCheckbox.checked;
@@ -67,8 +148,12 @@ function fetchDataAndRenderPlot() {
 
     const queryKey = `${date}-${geocentric}-${gif}-${duration}-${interval}`;
 
-    if (queryCache[queryKey]) {
-        renderPlot(queryCache[queryKey], geocentric);
+    // Check if data is available in localStorage
+    const cachedData = localStorage.getItem(queryKey);
+    if (cachedData) {
+        const data = JSON.parse(cachedData);
+        const dataToPlot = data.data;
+        renderPlot(dataToPlot, geocentric);
         return;
     }
 
@@ -87,9 +172,15 @@ function fetchDataAndRenderPlot() {
             return response.json();
         })
         .then(data => {
-            queryCache[queryKey] = data; // Store the result in the cache
+            // Try to store the data in localStorage
+            try {
+                addToCache(queryKey, data);
+            } catch (error) {
+                console.error('Error storing data in localStorage:', error);
+                errorText.textContent = 'Error: Data is too large to store in cache.';
+                errorText.style.display = 'block';
+            }
             renderPlot(data, geocentric);
-            updateNetworkText();
         })
         .catch(error => {
             console.error('Error fetching data:', error);
@@ -231,44 +322,3 @@ document.getElementById('plot-form').addEventListener('submit', function (event)
     event.preventDefault(); // Prevent the form from submitting
     fetchDataAndRenderPlot(); // Fetch data and render the plot
 });
-
-// Update the network text calculation based on GIF state, duration, and interval
-const updateNetworkText = () => {
-    const networkText = document.querySelector('#network-text'); // Get the new <li> element
-    if (!networkText) return; // Ensure the element exists
-
-    const gif = gifCheckbox.checked;
-    const duration = durationInput.value;
-    const interval = intervalInput.value;
-    const date = dateInput.value;
-    const geocentric = geocentricCheckbox.checked;
-
-    const queryKey = `${date}-${geocentric}-${gif}-${duration}-${interval}`;
-
-    if (queryCache[queryKey]) {
-        networkText.textContent = 'Estimated network usage for plot: 0 KiB (cached)';
-    } else if (gif) {
-        if (duration <= 0 || interval <= 0) {
-            networkText.textContent = 'Estimated network usage for plot: N/A';
-            return;
-        }
-        let estimatedSize = (estimated_network_size * (duration / interval)); // Calculate size
-        if (estimatedSize > 1024) {
-            networkText.textContent = `Estimated network usage for plot: ${(estimatedSize / 1024).toFixed(1)} MiB`;
-        } else {
-            networkText.textContent = `Estimated network usage for plot: ${estimatedSize.toFixed(1)} KiB`;
-        }
-    } else {
-        networkText.textContent = `Estimated network usage for plot: ${estimated_network_size.toFixed(1)} KiB`;
-    }
-};
-
-// Add event listeners to update the network size dynamically
-document.getElementById('gif').addEventListener('change', updateNetworkText);
-document.getElementById('interval').addEventListener('input', updateNetworkText);
-document.getElementById('duration').addEventListener('input', updateNetworkText);
-document.getElementById('date').addEventListener('input', updateNetworkText);
-document.getElementById('geocentric').addEventListener('change', updateNetworkText);
-
-// Initial trigger to set the correct text
-updateNetworkText();

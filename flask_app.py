@@ -5,11 +5,13 @@ from http import HTTPStatus
 import json
 
 from flask import Flask, request, jsonify
+from flask_compress import Compress
 
 from utils import solar_system_json, DEFAULT_NUM_DAYS, DEFAULT_INTERVAL, MAX_NUM_DAYS, MAX_INTERVAL
 
 app = Flask(__name__)
 app.json.compact = True
+Compress(app)
 
 
 @app.route("/")
