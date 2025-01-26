@@ -86,7 +86,7 @@ button:hover {
     }
 
     .form-group {
-        flex-direction: column; /* Stack fields vertically on small screens */
+        /*flex-direction: column; !* Stack fields vertically on small screens *!*/
         align-items: center; /* Center fields */
     }
 
@@ -111,6 +111,10 @@ button:hover {
 
     .gif-options {
         flex-direction: column; /* Stack the GIF options vertically */
+    }
+
+    input[type="number"] {
+        width: 40px;
     }
 }
 

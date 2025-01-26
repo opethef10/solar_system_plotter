@@ -1,16 +1,14 @@
 const gifCheckbox = document.getElementById('gif');
 const durationInput = document.getElementById('duration');
 const intervalInput = document.getElementById('interval');
+const geocentricCheckbox = document.getElementById('geocentric');
 const dateInput = document.getElementById('date');
 
 const defaultDate = new Date().toISOString().split('T')[0];
-const defaultDuration = 1000;
-const defaultInterval = 5;
 const gif_refresh_milliseconds = 50; // Timeout in milliseconds
+const estimated_network_size = 1.135; // Estimated network size in KiB
 
 dateInput.value = defaultDate;
-durationInput.value = defaultDuration;
-intervalInput.value = defaultInterval;
 
 function toggleGifInputs() {
     const isGifChecked = gifCheckbox.checked;
@@ -91,6 +89,7 @@ function fetchDataAndRenderPlot() {
         .then(data => {
             queryCache[queryKey] = data; // Store the result in the cache
             renderPlot(data, geocentric);
+            updateNetworkText();
         })
         .catch(error => {
             console.error('Error fetching data:', error);
@@ -232,3 +231,44 @@ document.getElementById('plot-form').addEventListener('submit', function (event)
     event.preventDefault(); // Prevent the form from submitting
     fetchDataAndRenderPlot(); // Fetch data and render the plot
 });
+
+// Update the network text calculation based on GIF state, duration, and interval
+const updateNetworkText = () => {
+    const networkText = document.querySelector('#network-text'); // Get the new <li> element
+    if (!networkText) return; // Ensure the element exists
+
+    const gif = gifCheckbox.checked;
+    const duration = durationInput.value;
+    const interval = intervalInput.value;
+    const date = dateInput.value;
+    const geocentric = geocentricCheckbox.checked;
+
+    const queryKey = `${date}-${geocentric}-${gif}-${duration}-${interval}`;
+
+    if (queryCache[queryKey]) {
+        networkText.textContent = 'Estimated network usage for plot: 0 KiB (cached)';
+    } else if (gif) {
+        if (duration <= 0 || interval <= 0) {
+            networkText.textContent = 'Estimated network usage for plot: N/A';
+            return;
+        }
+        let estimatedSize = (estimated_network_size * (duration / interval)); // Calculate size
+        if (estimatedSize > 1024) {
+            networkText.textContent = `Estimated network usage for plot: ${(estimatedSize / 1024).toFixed(1)} MiB`;
+        } else {
+            networkText.textContent = `Estimated network usage for plot: ${estimatedSize.toFixed(1)} KiB`;
+        }
+    } else {
+        networkText.textContent = `Estimated network usage for plot: ${estimated_network_size.toFixed(1)} KiB`;
+    }
+};
+
+// Add event listeners to update the network size dynamically
+document.getElementById('gif').addEventListener('change', updateNetworkText);
+document.getElementById('interval').addEventListener('input', updateNetworkText);
+document.getElementById('duration').addEventListener('input', updateNetworkText);
+document.getElementById('date').addEventListener('input', updateNetworkText);
+document.getElementById('geocentric').addEventListener('change', updateNetworkText);
+
+// Initial trigger to set the correct text
+updateNetworkText();
