@@ -1,0 +1,2 @@
+ephem~=4.1.0
+matplotlib~=3.10.0
