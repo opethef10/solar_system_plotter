@@ -1,0 +1,20 @@
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONIOENCODING=utf8
+ENV PYTHONUTF8=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ARG PIP_DISABLE_PIP_VERSION_CHECK=1
+ARG PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+COPY requirements.txt ./
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["python", "flask_app.py"]

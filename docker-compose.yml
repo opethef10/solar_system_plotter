@@ -1,0 +1,13 @@
+name: ${PROJECT_SLUG}
+
+services:
+  flask_app:
+    build:
+      context: .
+    image: ${PROJECT_SLUG}
+    container_name: ${PROJECT_SLUG}
+    ports:
+      - "${PROJECT_PORT_NUMBER}:5000"
+    volumes:
+      - .:/app
+    restart: unless-stopped
