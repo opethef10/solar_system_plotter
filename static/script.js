@@ -202,7 +202,7 @@ function fetchDataAndRenderPlot() {
     //     const normalizedRadius = radius / 20; // Assuming the radial axis range is [0, 10]
     //
     //     return {
-    //         source: `/static/${label.toLowerCase()}.png`, // Path to planet image
+    //         source: `/static/planets/${label.toLowerCase()}.png`, // Path to planet image
     //         xref: 'paper', // Use 'paper' reference for polar charts
     //         yref: 'paper', // Use 'paper' reference for polar charts
     //         x: 0.5 + xScale * normalizedRadius * Math.cos(angleRadians), // Normalize radius and convert to Cartesian
@@ -251,7 +251,10 @@ function renderPlotlyChart(data, geocentric) {
     });
 
     const layout = {
-        title: `${geocentric ? 'Geocentric' : 'Solar System'} View at ${data.date}`,
+        title: {
+          text: `${geocentric ? 'Geocentric' : 'Solar System'} View at ${data.date}`,
+          x: 0.5
+        },
         polar: {
             radialaxis: {
                 visible: true,
