@@ -16,18 +16,6 @@ app.json.compact = True
 Compress(app)
 
 
-@app.route("/")
-def index():
-    """Home route to render a simple HTML page"""
-    return app.send_static_file("index.html")
-
-
-@app.route('/favicon.ico')
-def favicon():
-    """Route to return the favicon"""
-    return app.send_static_file("favicon.ico")
-
-
 @app.route("/api")
 def api():
     """API route to return JSON data for the solar system at a given date"""
