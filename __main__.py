@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import argparse
 from datetime import date as Date, timedelta
-import json
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -17,9 +16,8 @@ BBOX = (1.21, 0.8)
 FPS = 20
 
 
-def plot_from_json(ax: Axes, data: str, geocentric: bool=False) -> Axes:
-    """Generate a matplotlib figure from JSON data."""
-    data = json.loads(data)  # Convert the JSON string back to a dictionary
+def plot_from_data(ax: Axes, data: dict, geocentric: bool=False) -> Axes:
+    """Generate a matplotlib figure from data."""
     title_prefix = "Geocentric view" if geocentric else "Solar system"
     ax.set_title(f"{title_prefix} at {data['date']}", fontsize=TITLE_FONT_SIZE, y=TITLE_Y)
 
@@ -52,7 +50,7 @@ def create_anim(date: Date, duration: int, interval: int, geocentric: bool) -> F
         """Update the plot for the given date."""
         ax.clear()
         data = solar_system_json(date)
-        return plot_from_json(ax, data, geocentric=geocentric)
+        return plot_from_data(ax, data, geocentric=geocentric)
 
     anim = FuncAnimation(
         fig,
@@ -103,6 +101,6 @@ if __name__ == '__main__':
     else:
         data = solar_system_json(args.date)
         fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-        plot_from_json(ax, data, geocentric=args.geocentric)
+        plot_from_data(ax, data, geocentric=args.geocentric)
 
     plt.show()

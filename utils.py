@@ -1,6 +1,5 @@
 from datetime import date as Date
 from functools import cache
-import json
 
 from ephem import Moon, Mercury, Venus, Sun, Mars, Jupiter, Saturn, Uranus, Neptune
 
@@ -16,7 +15,7 @@ PLANETS = Moon(), Mercury(), Venus(), Sun(), Mars(), Jupiter(), Saturn(), Uranus
 
 
 @cache
-def solar_system_json(date: Date) -> str:
+def solar_system_json(date: Date) -> dict:
     """Generate JSON data for the solar system at a given date."""
     data = {"date": date.isoformat(), "planets": []}
 
@@ -37,6 +36,6 @@ def solar_system_json(date: Date) -> str:
             "hlon": round(planet.hlon, 2),  # Heliocentric longitude
             "ra": round(planet.ra, 2)   # Right ascension
         })
-    return json.dumps(data)
+    return data
 
 

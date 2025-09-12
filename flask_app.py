@@ -2,7 +2,6 @@
 
 from datetime import date as Date, timedelta
 from http import HTTPStatus
-import json
 
 from flask import Flask, request, jsonify
 from flask_compress import Compress
@@ -47,11 +46,10 @@ def api():
         current_date = date
         while current_date <= last_date:
             data = solar_system_json(current_date)
-            datalist.append(json.loads(data))
+            datalist.append(data)
             current_date += timedelta(days=interval)
     else:
-        data = solar_system_json(date)
-        datalist = [json.loads(data)]
+        datalist = [solar_system_json(date)]
 
     return jsonify(datalist)
 
