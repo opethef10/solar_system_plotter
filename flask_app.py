@@ -33,26 +33,26 @@ def api():
 
     if gif:
         if not 0 < duration <= MAX_NUM_DAYS:
-            return jsonify({"error": "Duration should be between 1-1000 days."}), HTTPStatus.BAD_REQUEST
+            return jsonify({"error": f"Duration should be between 1-{MAX_NUM_DAYS} days."}), HTTPStatus.BAD_REQUEST
         if not 0 < interval <= MAX_INTERVAL:
-            return jsonify({"error": "Interval should be between 1-20 days."}), HTTPStatus.BAD_REQUEST
+            return jsonify({"error": f"Interval should be between 1-{MAX_INTERVAL} days."}), HTTPStatus.BAD_REQUEST
         if duration / interval > MAX_NUM_DAYS:
-            return jsonify({"error": "Duration divided by interval cannot exceed 1000."}), HTTPStatus.BAD_REQUEST
+            return jsonify({"error": f"Duration divided by interval cannot exceed {MAX_NUM_DAYS}."}), HTTPStatus.BAD_REQUEST
+        try:
+            last_date = date + timedelta(days=duration)
+        except OverflowError:
+            return jsonify({"error": f"Resulting date exceeds the maximum allowed year {Date.max}."}), HTTPStatus.BAD_REQUEST
 
-
-    # Generate JSON data for the given date
-    datalist = []
-    if gif:
-        for i in range(duration // interval):
-            try:
-                data = solar_system_json(date)
-                datalist.append(json.loads(data))
-                date += timedelta(days=interval)
-            except OverflowError:
-                return jsonify({"error": "Resulting date exceeds the maximum allowed year 9999."}), HTTPStatus.BAD_REQUEST
+        datalist = []
+        current_date = date
+        while current_date <= last_date:
+            data = solar_system_json(current_date)
+            datalist.append(json.loads(data))
+            current_date += timedelta(days=interval)
     else:
         data = solar_system_json(date)
-        datalist.append(json.loads(data))
+        datalist = [json.loads(data)]
+
     return jsonify(datalist)
 
 
