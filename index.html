@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Viewer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Solar System Viewer</h1>
+        <form id="plot-form" action="/" method="get">
+            <div class="form-group">
+                <label for="date" title="Select the date for the plot.">Date:</label>
+                <input type="date" id="date" name="date" required max="9999-12-31">
+
+                <label for="geocentric" title="Toggle between geocentric and heliocentric views.">
+                    <input type="checkbox" id="geocentric" name="geocentric" value="true">
+                    Geocentric View
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="gif" title="Create an animated GIF of the plot.">
+                    <input type="checkbox" id="gif" name="gif" value="true"> Create GIF
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="duration" title="Duration in days for the GIF animation.">Duration (days):</label>
+                <input type="number" id="duration" name="duration" value="1000" min="1" max="1000" required disabled>
+                <label for="interval" title="Interval in days between frames of the GIF animation.">Interval (days):</label>
+                <input type="number" id="interval" name="interval" value="5" min="1" max="20" required disabled>
+            </div>
+            <div class="form-group">
+                <ul id="info-text" class="info-text">
+                    <li>Duration and interval apply only to GIF generation.</li>
+                    <li>Duration can range from 1 to 1000, interval from 1 to 20.</li>
+                </ul>
+            </div>
+            <div class="form-group">
+                <button type="submit">Generate Plot</button>
+            </div>
+        </form>
+        <div class="plot-container">
+            <div id="error-text" class="error-text"></div>
+            <div id="plot"></div>
+            <p class="muted-text">Created by <a href="https://onurarikan.dev">Onur Arıkan</a> (2025) |
+                <a href="https://github.com/opethef10">GitHub</a> |
+                <a href="https://www.linkedin.com/in/onur93arikan">LinkedIn</a>
+            </p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

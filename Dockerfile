@@ -17,4 +17,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["python", "flask_app.py"]
+CMD ["python", "-m", "api.index"]

@@ -3,7 +3,7 @@ from datetime import date as Date, timedelta
 import json
 import unittest
 
-from flask_app import app
+from api.index import app
 
 class APITestCase(unittest.TestCase):
     def setUp(self):

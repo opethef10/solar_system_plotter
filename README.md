@@ -13,13 +13,12 @@ This project provides tools to visualize the solar system in either heliocentric
 The project requires the following third-party Python packages:
 
 - `ephem`
-- `imageio`
 - `matplotlib`
 
-Install the dependencies using the `requirements.txt` file:
+Install the dependencies using the `requirements_cli.txt` file:
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements_cli.txt
 ```
 
 ## Installation
@@ -30,7 +29,7 @@ pip install -r requirements.txt
    ```
 2. Install the required dependencies:
    ```bash
-   pip install -r requirements.txt
+   pip install -r requirements_cli.txt
    ```
 
 ## Usage
@@ -67,7 +66,7 @@ Plots and GIFs are saved in the `output` directory under the project folder. The
 ## Implementation Details
 - **Heliocentric View**: Plots planets around the Sun at their ecliptic longitudes.
 - **Geocentric View**: Plots planets around Earth using right ascension values.
-- **GIF Creation**: Saves frames in memory and compiles them into a GIF using `imageio`.
+- **GIF Creation**: Shows the frames together in a single animated image.
 
 ## Notes
 - The Moon's radius is fixed at `0.5` for visualization purposes in geocentric plots.

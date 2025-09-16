@@ -1,2 +1,2 @@
--r requirements_flask.txt
--r requirements_cli.txt
+ephem~=4.1.0
+flask~=3.1.0

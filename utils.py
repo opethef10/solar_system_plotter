@@ -1,5 +1,4 @@
 from datetime import date as Date
-from functools import cache
 
 from ephem import Moon, Mercury, Venus, Sun, Mars, Jupiter, Saturn, Uranus, Neptune
 
@@ -14,7 +13,6 @@ MAX_INTERVAL = 20
 PLANETS = Moon(), Mercury(), Venus(), Sun(), Mars(), Jupiter(), Saturn(), Uranus(), Neptune()
 
 
-@cache
 def solar_system_json(date: Date) -> dict:
     """Generate JSON data for the solar system at a given date."""
     data = {"date": date.isoformat(), "planets": []}
@@ -37,5 +35,3 @@ def solar_system_json(date: Date) -> dict:
             "ra": round(planet.ra, 2)   # Right ascension
         })
     return data
-
-

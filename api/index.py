@@ -4,15 +4,11 @@ from datetime import date as Date, timedelta
 from http import HTTPStatus
 
 from flask import Flask, request, jsonify
-from flask_compress import Compress
-from flask_cors import CORS
 
 from utils import solar_system_json, DEFAULT_NUM_DAYS, DEFAULT_INTERVAL, MAX_NUM_DAYS, MAX_INTERVAL
 
 app = Flask(__name__)
-CORS(app)
 app.json.compact = True
-Compress(app)
 
 
 @app.route("/api")
