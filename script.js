@@ -10,6 +10,36 @@ const api_root = ''
 
 dateInput.value = defaultDate;
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(() => console.log('Service Worker Registered'))
+    .catch(err => console.error('Service Worker registration failed:', err));
+}
+
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.hidden = false;   // show button
+});
+
+installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        deferredPrompt = null;
+        installBtn.hidden = true; // hide after user acts
+    }
+});
+
+// Optional: hide if already running as an installed PWA
+if (window.matchMedia('(display-mode: standalone)').matches) {
+    installBtn.hidden = true;
+}
+
 function getLocalStorageSize() {
     let totalSize = 0;
     for (let key in localStorage) {

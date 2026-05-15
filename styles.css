@@ -162,3 +162,19 @@ button:hover {
 #plot {
     height: auto; /* Maintain aspect ratio */
 }
+
+.header-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.install-btn {
+    font-size: 0.9rem;
+    padding: 6px 14px;
+    border-radius: 4px;
+    white-space: nowrap;
+    background-color: #444;
+}

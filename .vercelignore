@@ -8,3 +8,6 @@
 !requirements.txt
 !utils.py
 !favicon.ico
+!manifest.json
+!sw.js
+!icons
