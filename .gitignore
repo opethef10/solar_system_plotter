@@ -162,3 +162,7 @@ cython_debug
 # PERSONAL
 output/
 .vercel
+
+# Node / Cloudflare
+node_modules/
+.wrangler/

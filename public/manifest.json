@@ -2,7 +2,7 @@
   "name": "Solar System Plotter",
   "short_name": "Solar",
   "description": "A web application that allows users to visualize the solar system and plot the orbits of planets.",
-  "start_url": "/index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f7fa",
   "theme_color": "#4361ee",

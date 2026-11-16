@@ -72,6 +72,22 @@ Plots and GIFs are saved in the `output` directory under the project folder. The
 - The Moon's radius is fixed at `0.5` for visualization purposes in geocentric plots.
 - The script uses `ephem` to compute celestial positions accurately.
 
+## Web app
+
+The website lives in `public/` and is fully static: planet positions are computed in the browser with
+[astronomy-engine](https://github.com/cosinekitty/astronomy) (`public/solar.js`, library vendored in
+`public/vendor/`), so there is no backend. It is deployed with Cloudflare Workers static assets
+(`wrangler.jsonc`).
+
+```
+npx wrangler dev          # local preview at http://localhost:8787
+npx wrangler deploy       # deploy (asks you to log in the first time)
+npm install && npm test   # check the JS port against ephem reference values
+```
+
+The command-line tool (`__main__.py`, `utils.py`) still uses `ephem`. `tests/make_golden.py` regenerates
+the reference values in `tests/golden.json` from it.
+
 ## License
 This project is licensed under the MIT License. See `LICENSE` for details.
 

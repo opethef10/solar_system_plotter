@@ -1,0 +1,14 @@
+{
+  "name": "solar-system-plotter",
+  "private": true,
+  "description": "Static web app (Cloudflare Workers static assets); planet positions are computed in the browser with astronomy-engine.",
+  "scripts": {
+    "test": "node --test",
+    "dev": "npx wrangler dev",
+    "deploy": "npx wrangler deploy"
+  },
+  "devDependencies": {
+    "astronomy-engine": "2.1.19",
+    "wrangler": "4.162.0"
+  }
+}

@@ -6,11 +6,19 @@ const dateInput = document.getElementById('date');
 
 const defaultDate = new Date().toISOString().split('T')[0];
 const gif_refresh_milliseconds = 50; // Timeout in milliseconds
-const api_root = ''
 
 dateInput.value = defaultDate;
 
 if ('serviceWorker' in navigator) {
+  // sw.js is cache-first. When a new service worker takes over from an older one (e.g. right after a
+  // deploy) reload once, so the page runs the new files instead of the previously cached ones.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloaded) return;
+    reloaded = true;
+    window.location.reload();
+  });
   navigator.serviceWorker.register('/sw.js')
     .then(() => console.log('Service Worker Registered'))
     .catch(err => console.error('Service Worker registration failed:', err));
@@ -40,88 +48,6 @@ if (window.matchMedia('(display-mode: standalone)').matches) {
     installBtn.hidden = true;
 }
 
-function getLocalStorageSize() {
-    let totalSize = 0;
-    for (let key in localStorage) {
-        if (localStorage.hasOwnProperty(key)) {
-            totalSize += localStorage.getItem(key).length * 2; // Each character is 2 bytes
-        }
-    }
-    return totalSize;
-}
-
-function ensureEnoughSpace(requiredSize) {
-    const maxSize = 5 * 1024 * 1024; // 5MB (adjust as needed)
-    let currentSize = getLocalStorageSize();
-
-    // If the required size exceeds the maximum allowed size, throw an error
-    if (requiredSize > maxSize) {
-        throw new Error('Data is too large to store in localStorage');
-    }
-
-    // If there's not enough space, clear older entries
-    if (currentSize + requiredSize > maxSize) {
-        const entries = [];
-        for (let key in localStorage) {
-            if (localStorage.hasOwnProperty(key)) {
-                const value = localStorage.getItem(key);
-                const timestamp = JSON.parse(value).timestamp; // Assume each value has a timestamp
-                entries.push({ key, size: value.length * 2, timestamp });
-            }
-        }
-
-        // Sort entries by timestamp (oldest first)
-        entries.sort((a, b) => a.timestamp - b.timestamp);
-
-        // Remove the oldest entries until there's enough space
-        while (currentSize + requiredSize > maxSize && entries.length > 0) {
-            const oldestEntry = entries.shift(); // Get the oldest entry
-            localStorage.removeItem(oldestEntry.key); // Remove it from localStorage
-            currentSize -= oldestEntry.size; // Update the current size
-        }
-    }
-}
-
-function addToCache(queryKey, data) {
-    const value = JSON.stringify({
-        data, // The actual data
-        timestamp: Date.now(), // Current timestamp
-    });
-
-    const requiredSize = value.length * 2; // Calculate the size of the new data
-
-    // Ensure there's enough space in localStorage
-    ensureEnoughSpace(requiredSize);
-
-    // Store the data in localStorage
-    localStorage.setItem(queryKey, value);
-}
-
-function manageCacheSize() {
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    let currentSize = 0;
-
-    // Calculate current cache size
-    for (let key in localStorage) {
-        if (localStorage.hasOwnProperty(key)) {
-            currentSize += localStorage.getItem(key).length * 1; // Each character is 2 bytes
-        }
-    }
-
-    debugger;
-    // If cache size exceeds the limit, remove the oldest entries
-    if (currentSize > maxSize) {
-        const keys = Object.keys(localStorage);
-        while (currentSize > maxSize && keys.length > 0) {
-            const oldestKey = localStorage.key(0)
-            const itemSize = localStorage.getItem(oldestKey).length * 1;
-            localStorage.removeItem(oldestKey);
-            currentSize -= itemSize;
-        }
-    }
-}
-
-
 function toggleGifInputs() {
     const isGifChecked = gifCheckbox.checked;
     durationInput.disabled = !isGifChecked;
@@ -141,7 +67,6 @@ const PlotManager = {
     isPlotting: false,
     intervalId: null, // Store the interval ID for dynamic plotting
 };
-const queryCache = {}; // Cache the query results to avoid duplicate requests
 function renderPlot(data, geocentric) {
     if (data.length === 1) {
         renderPlotlyChart(data[0], geocentric);
@@ -161,8 +86,8 @@ function renderPlot(data, geocentric) {
     }
     errorText.style.display = 'none';
 }
-// Function to fetch JSON data and render the Plotly chart
-function fetchDataAndRenderPlot() {
+// Compute the positions in the browser (solar.js) and render the Plotly chart
+function computeAndRenderPlot() {
     const date = dateInput.value;
     const geocentric = geocentricCheckbox.checked;
     const gif = document.getElementById('gif').checked;
@@ -175,49 +100,18 @@ function fetchDataAndRenderPlot() {
         PlotManager.isPlotting = false; // Reset the flag
     }
 
-    PlotManager.isPlotting = true;
-
-    const queryKey = gif ? `${date}-${gif}-${duration}-${interval}` : `${date}`;
-
-    // Check if data is available in localStorage
-    const cachedData = localStorage.getItem(queryKey);
-    if (cachedData) {
-        const data = JSON.parse(cachedData);
-        const dataToPlot = data.data;
-        renderPlot(dataToPlot, geocentric);
+    let data;
+    try {
+        data = SolarSystem.computeSolarSystem({ date, gif, duration, interval });
+    } catch (error) {
+        console.error('Error computing positions:', error);
+        errorText.textContent = 'Error: ' + error.message;
+        errorText.style.display = 'block';
         return;
     }
 
-    const fetchInput = gif
-        ? `${api_root}/api?date=${date}&gif=${gif}&duration=${duration}&interval=${interval}`
-        : `${api_root}/api?date=${date}`;
-
-    // Fetch JSON data from the Flask backend
-    fetch(fetchInput)
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.error);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Try to store the data in localStorage
-            try {
-                addToCache(queryKey, data);
-            } catch (error) {
-                console.error('Error storing data in localStorage:', error);
-                errorText.textContent = 'Error: Data is too large to store in cache.';
-                errorText.style.display = 'block';
-            }
-            renderPlot(data, geocentric);
-        })
-        .catch(error => {
-            console.error('Error fetching data:', error);
-            errorText.textContent = 'Error fetching data: ' + error.message;
-            errorText.style.display = 'block';
-        });
+    PlotManager.isPlotting = true;
+    renderPlot(data, geocentric);
 }
 
     // Calculate image positions and create image objects
@@ -341,7 +235,7 @@ function getMarkerColor(planetName) {
 }
 
 // Initial rendering when the page loads
-fetchDataAndRenderPlot();
+computeAndRenderPlot();
 
 const resizeObserver = new ResizeObserver(() => {
     const width = plotContainer.clientWidth;
@@ -354,5 +248,5 @@ resizeObserver.observe(plotContainer);
 // Event listener for form submission
 document.getElementById('plot-form').addEventListener('submit', function (event) {
     event.preventDefault(); // Prevent the form from submitting
-    fetchDataAndRenderPlot(); // Fetch data and render the plot
+    computeAndRenderPlot(); // Compute and render the plot
 });

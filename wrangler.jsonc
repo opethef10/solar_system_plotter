@@ -1,0 +1,11 @@
+{
+  "name": "solar-system-plotter",
+  // Set this to the date you deploy
+  "compatibility_date": "2026-09-20",
+  "assets": {
+    // Only this folder is uploaded: no Python files, .git, tests or node_modules.
+    "directory": "./public"
+  },
+  // Served on its own domain; the zone must be managed by Cloudflare.
+  "routes": [{ "pattern": "solar.onurarikan.dev", "custom_domain": true }]
+}
